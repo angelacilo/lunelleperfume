@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sign Up | Lunelle PERFUME{% endblock %}
+
+{% block content %}
+<div class="auth-card-wrap">
+    <div class="auth-header">
+        <img src="{% static 'images/logo_monogram.png' %}" alt="Lunelle Logo" class="auth-logo">
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Join Lunelle for a soft, curated perfume experience</p>
+    </div>
+
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div style="background: #FFE3EE; border: 2px solid var(--dark-border); border-radius: 16px; padding: 0.8rem 1rem; margin-bottom: 1.2rem; font-size: 0.85rem; font-weight: 600;">
+            Please correct the errors below.
+        </div>
+        {% endif %}
+
+        {% for field in form %}
+        <div class="pill-form-group">
+            <label class="pill-form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <small style="display:block; font-size:0.75rem; color: var(--muted-text); margin-top:0.3rem;">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+            <small style="display:block; color: #c0392b; font-size:0.8rem; font-weight:700;">{{ error }}</small>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <button class="btn-pill btn-pill-block" type="submit" style="margin-top: 1rem;">Create My Account ♡</button>
+    </form>
+
+    <div class="auth-footer">
+        Already have an account? <a href="{% url 'accounts:login' %}">Log in here</a>
+    </div>
+</div>
+{% endblock %}

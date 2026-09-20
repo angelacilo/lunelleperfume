@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Checkout | Lunelle PERFUME{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto;">
+    <div class="lunelle-modal" style="box-shadow: 4px 6px 0px var(--dark-border); margin: 1rem auto;">
+        <div class="modal-handle-bar"></div>
+
+        <!-- STEP 1: How will you pay? -->
+        <div id="modal-step-1">
+            <div class="modal-header">
+                <h2 class="modal-title">How will you pay?</h2>
+            </div>
+            <p class="modal-subtitle">Pick one first. Then we'll take your name.</p>
+
+            <button type="button" class="payment-option-btn" id="choose-ewallet-btn">
+                <div class="payment-option-title">E-wallet</div>
+                <div class="payment-option-desc">GCash / Maya – we'll show the shop QR next.</div>
+            </button>
+
+            <button type="button" class="payment-option-btn" id="choose-cash-btn">
+                <div class="payment-option-title">Cash</div>
+                <div class="payment-option-desc">Pay when you pick up or meet the owner.</div>
+            </button>
+
+            <a href="{% url 'cart:cart_detail' %}" class="modal-link-pink">back to cart</a>
+        </div>
+
+        <!-- STEP 2: Almost there -->
+        <div id="modal-step-2" style="display: none;">
+            <div class="modal-header">
+                <h2 class="modal-title">Almost there</h2>
+            </div>
+            
+            <div class="modal-section-label">Your order</div>
+            <div class="modal-order-box">
+                {% for item in cart %}
+                <div class="modal-order-item">
+                    <span>{{ item.product.name }}{% if item.quantity > 1 %} <small style="color:var(--muted-text);">×{{ item.quantity }}</small>{% endif %}</span>
+                    <span>₱{{ item.total_price }}</span>
+                </div>
+                {% endfor %}
+                <hr class="modal-order-divider">
+                <div class="modal-order-subtotal">
+                    <span>Total</span>
+                    <span>₱{{ cart.get_total_price }}</span>
+                </div>
+            </div>
+
+            <div class="modal-grand-total">
+                <span>Grand total</span>
+                <span>₱{{ cart.get_total_price }}</span>
+            </div>
+
+            <!-- Scan to pay section (Displayed ONLY for E-wallet) -->
+            <div id="scan-to-pay-section" style="display: none;">
+                <div class="modal-section-label">Scan to pay</div>
+                <div class="modal-qr-container">
+                    <img src="{% static 'images/qr_slip.png' %}" alt="Shop QR Scan To Pay" class="qr-slip-img">
+                    <div class="qr-instruction">InstaPay / GCash / Maya scan to pay. Please keep a screenshot of your transfer!</div>
+                </div>
+            </div>
+
+            <!-- Customer Details Form -->
+            <form id="checkout-order-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="payment_method" id="selected-payment-method" value="cash">
+
+                <div class="pill-form-group">
+                    <label class="pill-form-label" for="id_full_name">Your name</label>
+                    <input type="text" name="full_name" id="id_full_name" class="pill-input" placeholder="e.g. Maria Santos" required value="{% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}">
+                </div>
+
+                <div class="pill-form-group">
+                    <label class="pill-form-label" for="id_contact">Contact (mobile or social)</label>
+                    <input type="text" name="contact" id="id_contact" class="pill-input" placeholder="GCash number, IG, or FB name" required>
+                </div>
+
+                <div class="pill-form-group">
+                    <label class="pill-form-label" for="id_note">Note (optional)</label>
+                    <textarea name="note" id="id_note" class="pill-input pill-textarea" placeholder="Gift wrap, pickup, shade of mint..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-pill btn-pill-block" id="place-order-submit-btn">
+                    place order
+                </button>
+            </form>
+
+            <a href="javascript:void(0)" id="change-payment-btn" class="modal-link-pink">change payment</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const step1 = document.getElementById('modal-step-1');
+    const step2 = document.getElementById('modal-step-2');
+    const scanSection = document.getElementById('scan-to-pay-section');
+    const paymentInput = document.getElementById('selected-payment-method');
+
+    function showStep1() {
+        step1.style.display = 'block';
+        step2.style.display = 'none';
+    }
+
+    function showStep2(method) {
+        step1.style.display = 'none';
+        step2.style.display = 'block';
+        paymentInput.value = method;
+
+        if (method === 'ewallet') {
+            scanSection.style.display = 'block';
+        } else {
+            scanSection.style.display = 'none';
+        }
+    }
+
+    document.getElementById('choose-ewallet-btn')?.addEventListener('click', function() {
+        showStep2('ewallet');
+    });
+
+    document.getElementById('choose-cash-btn')?.addEventListener('click', function() {
+        showStep2('cash');
+    });
+
+    document.getElementById('change-payment-btn')?.addEventListener('click', function() {
+        showStep1();
+    });
+</script>
+{% endblock %}

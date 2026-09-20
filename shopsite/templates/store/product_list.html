@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Lunelle PERFUME | Fragrance Collection{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Lunelle Brandkit Aesthetic -->
+<div class="hero-banner">
+    <div class="hero-quote">more than just a fragrance, it's a feeling ♡</div>
+    <h1 class="hero-title">Lunelle Collection</h1>
+    <p class="hero-subtitle">A scent for your softest moments</p>
+</div>
+
+<!-- Filters & Search -->
+<div class="category-filter-bar">
+    <a href="{% url 'store:product_list' %}" class="category-pill {% if not category %}active{% endif %}">✨ All Scents</a>
+    {% for c in categories %}
+        <a href="{% url 'store:product_list_by_category' c.slug %}" class="category-pill {% if category and category.slug == c.slug %}active{% endif %}">
+            🌸 {{ c.name }}
+        </a>
+    {% endfor %}
+
+    <div class="search-box">
+        <form method="get">
+            <input type="text" name="q" class="pill-search-input" placeholder="Search fragrances..." value="{{ query }}">
+        </form>
+    </div>
+</div>
+
+<!-- Products Grid -->
+<div class="product-grid">
+    {% for product in page_obj %}
+    <div class="product-card">
+        <a href="{{ product.get_absolute_url }}" class="product-card-link">
+            <div class="product-img-wrap">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                {% else %}
+                    <div class="product-img-placeholder">🌸</div>
+                {% endif %}
+            </div>
+            <h3 class="product-card-title">{{ product.name }}</h3>
+            {% if product.description %}
+                <p class="product-card-desc">{{ product.description }}</p>
+            {% endif %}
+        </a>
+        <div class="product-card-bottom">
+            <span class="product-price">₱{{ product.price }}</span>
+            {% if product.in_stock %}
+                <form class="ajax-add-to-cart-form" action="{% url 'cart:cart_add' product.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="btn-pill btn-pill-sm" title="Add to cart">
+                        + Add ♡
+                    </button>
+                </form>
+            {% else %}
+                <span style="font-size:0.8rem; font-weight:700; color:var(--muted-text);">Out of Stock</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; background: var(--cream-surface); border: 2.5px dashed var(--dark-border); border-radius: 24px;">
+        <p style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">No fragrances found.</p>
+        <p style="color: var(--muted-text);">Try searching for something else or explore our full collection.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div style="display: flex; justify-content: center; gap: 0.8rem; align-items: center; margin-top: 3rem;">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn-pill btn-pill-sm btn-pill-outline">← Prev</a>
+    {% endif %}
+    <span style="font-weight: 700; font-size: 0.95rem;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn-pill btn-pill-sm btn-pill-outline">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.querySelectorAll('.ajax-add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Adding...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message || 'Added to cart! ♡');
+                    updateCartBadge(data.cart_count);
+                } else {
+                    showToast('Could not add item to cart.');
+                }
+            } catch (err) {
+                console.error(err);
+                this.submit(); // fallback to standard submit if fetch fails
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

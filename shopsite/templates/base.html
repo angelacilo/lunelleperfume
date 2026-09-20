@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lunelle PERFUME{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo_monogram.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Allura&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="lunelle-header">
+        <div class="header-container">
+            <a class="brand" href="{% url 'store:product_list' %}">
+                <img src="{% static 'images/logo_monogram.png' %}" alt="Lunelle Logo" class="brand-logo">
+                <div class="brand-text-wrap">
+                    <span class="brand-name">Lunelle</span>
+                    <span class="brand-sub">PERFUME</span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <a href="{% url 'store:product_list' %}" class="nav-link">Shop</a>
+                <a href="{% url 'cart:cart_detail' %}" class="nav-link cart-link">
+                    🛒 Cart (<span id="nav-cart-count">{{ cart|length }}</span>)
+                </a>
+                {% if user.is_authenticated %}
+                    {% if user.is_staff or user.is_superuser %}
+                        <a href="/admin/" class="admin-nav-badge" target="_blank" title="Django Administration Dashboard">⚡ Admin Panel</a>
+                    {% endif %}
+                    <a href="{% url 'orders:order_history' %}" class="nav-link">My Orders</a>
+                    <form action="{% url 'accounts:logout' %}" method="post" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-btn-link">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="nav-link">Login</a>
+                    <a href="{% url 'accounts:signup' %}" class="nav-link nav-btn-signup">Sign up</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="lunelle-main">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message-item message-{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Toast Notification -->
+    <div id="lunelle-toast" class="lunelle-toast"></div>
+
+    <footer class="lunelle-footer">
+        <div class="footer-content">
+            <div class="footer-tagline-quote">more than just a fragrance, it's a feeling ♡</div>
+            <p class="footer-sub">A scent for your softest moments</p>
+            <p class="footer-copy">© 2026 Lunelle PERFUME. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function showToast(message) {
+            const toast = document.getElementById('lunelle-toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+
+        function updateCartBadge(count) {
+            const badge = document.getElementById('nav-cart-count');
+            if (badge) {
+                badge.textContent = count;
+                badge.classList.add('badge-bump');
+                setTimeout(() => badge.classList.remove('badge-bump'), 300);
+            }
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

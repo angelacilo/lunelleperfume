@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Login | Lunelle PERFUME{% endblock %}
+
+{% block content %}
+<div class="auth-card-wrap">
+    <div class="auth-header">
+        <img src="{% static 'images/logo_monogram.png' %}" alt="Lunelle Logo" class="auth-logo">
+        <h1 class="auth-title">Welcome</h1>
+        <p class="auth-subtitle">Sign in to your Lunelle account (Admin & Customer)</p>
+    </div>
+
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div style="background: #FFE3EE; border: 2px solid var(--dark-border); border-radius: 16px; padding: 0.8rem 1rem; margin-bottom: 1.2rem; font-size: 0.88rem; font-weight: 600;">
+            Please check your username and password.
+        </div>
+        {% endif %}
+        
+        <div class="pill-form-group">
+            <label class="pill-form-label" for="{{ form.username.id_for_label }}">Username</label>
+            <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="pill-input" placeholder="Your username" required autofocus>
+        </div>
+
+        <div class="pill-form-group" style="margin-bottom: 1.5rem;">
+            <label class="pill-form-label" for="{{ form.password.id_for_label }}">Password</label>
+            <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="pill-input" placeholder="Your password" required>
+        </div>
+
+        {% if request.GET.next %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
+
+        <button class="btn-pill btn-pill-block" type="submit">Sign In ♡</button>
+    </form>
+
+    <div class="auth-footer">
+        Don't have an account? <a href="{% url 'accounts:signup' %}">Create one here</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}My Orders | Lunelle PERFUME{% endblock %}
+
+{% block content %}
+<div class="cart-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h1 style="font-family: var(--font-serif); font-size: 2rem;">Order History</h1>
+        <a href="{% url 'store:product_list' %}" class="btn-pill btn-pill-outline btn-pill-sm">← Back to Shop</a>
+    </div>
+
+    {% if orders %}
+    <div style="overflow-x: auto;">
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Date</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr class="cart-row">
+                    <td><strong>#{{ order.id }}</strong></td>
+                    <td style="color: var(--muted-text);">{{ order.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <span class="category-pill" style="font-size: 0.8rem; padding: 0.2rem 0.6rem;">
+                            {% if order.payment_method == "ewallet" %}💳 E-wallet{% else %}💵 Cash{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="font-weight: 700; color: {% if order.status == 'paid' %}#27ae60{% elif order.status == 'shipped' %}#2980b9{% else %}#d35400{% endif %};">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="font-weight: 800;">₱{{ order.get_total_cost }}</td>
+                    <td>
+                        <a href="{% url 'orders:order_detail' order.id %}" class="btn-pill btn-pill-sm btn-pill-outline">View Receipt</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem 1rem;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🌸</div>
+        <h2 style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 0.5rem;">No orders yet</h2>
+        <p style="color: var(--muted-text); margin-bottom: 1.5rem;">When you place an order, it will appear right here.</p>
+        <a href="{% url 'store:product_list' %}" class="btn-pill">Start Shopping ♡</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ product.name }} | Lunelle PERFUME{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{% url 'store:product_list' %}" class="btn-pill btn-pill-sm btn-pill-outline">← Back to Fragrances</a>
+</div>
+
+<div class="product-detail-container">
+    <div class="product-detail-img-wrap">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% else %}
+            <div class="product-img-placeholder" style="font-size: 5rem;">🌸</div>
+        {% endif %}
+    </div>
+
+    <div class="product-detail-info">
+        {% if product.category %}
+            <span class="product-detail-category">🌸 {{ product.category.name }}</span>
+        {% endif %}
+
+        <h1>{{ product.name }}</h1>
+        <div class="product-detail-price">₱{{ product.price }}</div>
+        
+        <p class="product-detail-desc">
+            {{ product.description|default:"A captivating fragrance crafted for your softest and most memorable moments."|linebreaks }}
+        </p>
+
+        {% if product.in_stock %}
+        <form id="product-detail-add-form" action="{% url 'cart:cart_add' product.id %}" method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                <div class="qty-input-wrap">
+                    <button type="button" class="qty-btn" id="qty-minus">−</button>
+                    <input type="number" name="quantity" id="qty-input" value="1" min="1" max="{{ product.stock }}">
+                    <button type="button" class="qty-btn" id="qty-plus">+</button>
+                </div>
+                <button class="btn-pill" type="submit" id="add-to-cart-btn" style="padding: 0.75rem 1.8rem;">
+                    Add to Cart ♡
+                </button>
+            </div>
+        </form>
+
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <a href="{% url 'cart:cart_detail' %}" class="btn-pill btn-pill-outline btn-pill-sm">
+                View My Cart 🛒
+            </a>
+            <span style="font-size: 0.85rem; color: var(--muted-text);">In stock ({{ product.stock }} bottles available)</span>
+        </div>
+        {% else %}
+        <div style="background: #FFE3EE; border: 2px solid var(--dark-border); border-radius: 18px; padding: 1rem 1.5rem; display: inline-block;">
+            <strong>Currently Out of Stock</strong>
+            <p style="font-size: 0.85rem; color: var(--muted-text); margin-top: 0.3rem;">Please check back soon for the next batch release.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const qtyInput = document.getElementById('qty-input');
+    const minusBtn = document.getElementById('qty-minus');
+    const plusBtn = document.getElementById('qty-plus');
+    const maxQty = parseInt("{{ product.stock|default:'99' }}");
+
+    if (minusBtn && plusBtn && qtyInput) {
+        minusBtn.addEventListener('click', () => {
+            let val = parseInt(qtyInput.value) || 1;
+            if (val > 1) qtyInput.value = val - 1;
+        });
+
+        plusBtn.addEventListener('click', () => {
+            let val = parseInt(qtyInput.value) || 1;
+            if (val < maxQty) qtyInput.value = val + 1;
+        });
+    }
+
+    const detailForm = document.getElementById('product-detail-add-form');
+    if (detailForm) {
+        detailForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('add-to-cart-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Adding to cart...';
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message || 'Added to cart! ♡');
+                    updateCartBadge(data.cart_count);
+                } else {
+                    showToast('Could not add to cart.');
+                }
+            } catch (err) {
+                console.error(err);
+                this.submit();
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+</script>
+{% endblock %}

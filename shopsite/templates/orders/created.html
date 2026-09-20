@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Order #{{ order.id }} Confirmed | Lunelle PERFUME{% endblock %}
+
+{% block content %}
+<div class="order-success-card">
+    <div style="font-size: 3rem; margin-bottom: 0.5rem;">🌸✨</div>
+    <span class="order-success-badge">Order Confirmed ♡</span>
+    <h1 style="font-family: var(--font-serif); font-size: 2.2rem; margin-bottom: 0.5rem;">Thank you, {{ order.full_name }}!</h1>
+    <p style="color: var(--muted-text); margin-bottom: 1.5rem;">
+        Your order <strong>#{{ order.id }}</strong> has been successfully placed.
+    </p>
+
+    <!-- Payment instructions based on selected payment method -->
+    <div style="background: #FAF7F2; border: 2px solid var(--dark-border); border-radius: 24px; padding: 1.5rem; text-align: left; margin-bottom: 1.8rem; box-shadow: 2px 3px 0px var(--dark-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            <span style="font-weight: 800; font-size: 1.05rem;">Payment Method</span>
+            <span class="category-pill" style="font-size: 0.85rem; padding: 0.2rem 0.8rem;">
+                {% if order.payment_method == "ewallet" %}💳 E-Wallet (GCash / Maya){% else %}💵 Cash on Pickup / Meetup{% endif %}
+            </span>
+        </div>
+
+        {% if order.payment_method == "ewallet" %}
+        <div style="text-align: center; margin: 1rem 0;">
+            <img src="{% static 'images/qr_slip.png' %}" alt="Lunelle QR Scan" style="max-width: 130px; border-radius: 12px; border: 1.5px solid var(--dark-border); background: white; padding: 0.3rem;">
+            <p style="font-size: 0.85rem; color: var(--muted-text); margin-top: 0.5rem;">
+                If you haven't scanned yet, please send <strong>₱{{ order.get_total_cost }}</strong> to the QR code above and keep your receipt screenshot.
+            </p>
+        </div>
+        {% else %}
+        <p style="font-size: 0.9rem; color: var(--muted-text); margin-bottom: 0.5rem;">
+            Please prepare the exact amount of <strong>₱{{ order.get_total_cost }}</strong> when picking up or meeting the owner.
+        </p>
+        {% endif %}
+
+        {% if order.contact %}
+        <div style="font-size: 0.9rem; margin-top: 0.5rem; border-top: 1px dashed #D5C2C9; padding-top: 0.5rem;">
+            <strong>Your Contact:</strong> {{ order.contact }}
+        </div>
+        {% endif %}
+
+        {% if order.note %}
+        <div style="font-size: 0.9rem; margin-top: 0.3rem;">
+            <strong>Order Note:</strong> {{ order.note }}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Items list -->
+    <div style="background: var(--cream-surface); border: 2px solid var(--dark-border); border-radius: 24px; padding: 1.5rem; text-align: left; margin-bottom: 2rem; box-shadow: 2px 3px 0px var(--dark-border);">
+        <h3 style="font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 0.8rem;">Items in Order</h3>
+        {% for item in order.items.all %}
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.95rem;">
+            <span>{{ item.product.name }} <small style="color: var(--muted-text);">×{{ item.quantity }}</small></span>
+            <span style="font-weight: 700;">₱{{ item.get_cost }}</span>
+        </div>
+        {% endfor %}
+        <hr style="border: none; border-top: 2px solid var(--dark-border); margin: 0.8rem 0;">
+        <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.15rem;">
+            <span>Total</span>
+            <span>₱{{ order.get_total_cost }}</span>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a class="btn-pill" href="{% url 'store:product_list' %}">Explore More Scents ♡</a>
+        {% if user.is_authenticated %}
+        <a class="btn-pill btn-pill-outline" href="{% url 'orders:order_history' %}">View Order History</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
